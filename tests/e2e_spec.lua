@@ -72,4 +72,31 @@ describe('end-to-end', function()
     assert.is_not_nil(client)
     assert.is_true(client.server_capabilities.hoverProvider == true)
   end)
+
+  it('honours an explicit opts table (name + capability toggles)', function()
+    -- This is the path external plugins (e.g. nvim-rndc-zone) reach via
+    -- require('named-conf').lsp_attach(bufnr, opts).
+    local id = require('named-conf').lsp_attach(bufnr, {
+      name = 'named-conf-test', hover = false, completion = true, root_dir = 'virtual',
+    })
+    assert.is_not_nil(id)
+    local client = vim.lsp.get_client_by_id(id)
+    assert.equals('named-conf-test', client.name)
+    assert.is_falsy(client.server_capabilities.hoverProvider)
+    assert.is_not_nil(client.server_capabilities.completionProvider)
+    assert.is_not_nil(client.server_capabilities.completionProvider.triggerCharacters)
+  end)
+
+  it('exposes hover_markdown for programmatic use', function()
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local row
+    for i, l in ipairs(lines) do
+      if l:match('^%s*type%s') then row = i - 1 break end
+    end
+    assert.is_not_nil(row)
+    local col = ({ lines[row + 1]:find('type') })[1]
+    local md = require('named-conf').hover_markdown(bufnr, row, col)
+    assert.is_not_nil(md)
+    assert.is_true(md:find('type', 1, true) ~= nil)
+  end)
 end)

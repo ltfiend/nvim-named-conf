@@ -28,3 +28,9 @@ I need to take a step back.  You are using my local nvim install which is an old
 
 ---
 
+## 2026-06-03 10:31:26
+
+take a look at my nvim-rndc-zone plugin.  What is the best way to make the named.conf LSP you just built work inside of that nvim-rndc-zone plugin.  If we need to split the named LSP off please do so
+
+---
+

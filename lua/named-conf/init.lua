@@ -37,4 +37,24 @@ function M.validate(...) return require('named-conf.validate').run(...) end
 function M.check(...) return require('named-conf.checkconf').run(...) end
 function M.docs(...) return require('named-conf.hover').show(...) end
 
+-- Public API for OTHER plugins that edit named.conf syntax in their own buffers
+-- (e.g. nvim-rndc-zone editing a `zone { ... }` block from `rndc showzone`).
+-- These work without calling setup() — the LSP server reads the live buffer.
+
+--- Attach the in-process docs LSP (hover + completion) to a buffer.
+--- Pass a stable `name`+`root_dir` to share one client across many buffers.
+---@param bufnr integer
+---@param opts? { hover?: boolean, completion?: boolean, name?: string, root_dir?: string }
+---@return integer|nil client_id
+function M.lsp_attach(bufnr, opts) return require('named-conf.lsp').start(bufnr, opts) end
+
+--- Resolve markdown docs for the symbol at (row, col) (0-indexed), or nil.
+---@param bufnr integer
+---@param row integer
+---@param col integer
+---@return string|nil
+function M.hover_markdown(bufnr, row, col)
+  return require('named-conf.hover').markdown(bufnr, row, col)
+end
+
 return M

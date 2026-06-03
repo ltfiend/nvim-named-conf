@@ -207,6 +207,28 @@ vim.api.nvim_create_autocmd('User', {
 | `:NamedSnippet {name}` | Insert a skeleton (`zone-primary`, `acl`, `view`, …) |
 | `:NamedAttach` | Attach features to the current buffer manually |
 
+## Embedding the docs LSP in another plugin
+
+Other plugins that present named.conf syntax in their own buffers can reuse the
+in-process documentation LSP (hover + completion) without copying the knowledge
+base. For example, [`nvim-rndc-zone`](https://github.com/ltfiend/nvim-rndc-zone)
+attaches it to the `zone { … }` block it fetches via `rndc showzone`.
+
+```lua
+-- Attach hover + completion to any buffer holding named.conf syntax.
+-- A stable name+root_dir lets many buffers share one (stateless) client.
+require('named-conf').lsp_attach(bufnr, {
+  name = 'named-conf', root_dir = 'my-plugin',
+  hover = true, completion = true,
+})
+
+-- Or resolve docs programmatically (markdown string or nil):
+local md = require('named-conf').hover_markdown(bufnr, row, col) -- 0-indexed
+```
+
+`lsp_attach` works without calling `setup()` and is best used behind a soft
+`pcall(require, 'named-conf')` so your plugin still works when it isn't installed.
+
 ## Health
 
 ```vim
