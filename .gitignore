@@ -1,0 +1,8 @@
+# Neovim swap / temp
+*.swp
+*.swo
+# named-conf temp check files
+.*.nvim-named-check
+# test/runtime junk
+tests/.tests/
+*.log

@@ -1,0 +1,183 @@
+*named-conf.txt*  Edit BIND named.conf with folding, docs, and named-checkconf
+
+==============================================================================
+CONTENTS                                                     *named-conf-contents*
+
+  1. Introduction ........................... |named-conf-intro|
+  2. Requirements ........................... |named-conf-requirements|
+  3. Setup .................................. |named-conf-setup|
+  4. Configuration .......................... |named-conf-config|
+  5. Checking the config .................... |named-conf-checkconf|
+  6. Colour coding .......................... |named-conf-highlight|
+  7. Documentation popups ................... |named-conf-docs|
+  8. Commands ............................... |named-conf-commands|
+  9. Events ................................. |named-conf-events|
+ 10. Health ................................. |named-conf-health|
+
+==============================================================================
+1. INTRODUCTION                                                 *named-conf-intro*
+
+named-conf.nvim layers structure on top of Neovim's built-in `named` filetype
+for editing BIND `named.conf` files:
+
+  - clause-aware folding (zone / options / view / acl / key / logging ...);
+  - semantic colour coding, including address-match "filter" statements;
+  - an in-process documentation LSP (hover via |K| and completion);
+  - static diagnostics (brace balance, duplicate zones);
+  - a configurable `named-checkconf` runner.
+
+The buffer keeps its `named` filetype, so the built-in syntax (and any
+treesitter/LSP you use) keeps working.
+
+==============================================================================
+2. REQUIREMENTS                                          *named-conf-requirements*
+
+  - Neovim 0.11+ (developed and tested on 0.12.2; runs on 0.13 nightly).
+  - `named-checkconf` on $PATH for |:NamedCheck| (optional).
+  - Optional: snacks.nvim (nicer |:NamedBrowse|), blink.cmp (completion source).
+
+==============================================================================
+3. SETUP                                                         *named-conf-setup*
+
+With lazy.nvim: >lua
+    {
+      'ltfiend/nvim-named-conf',
+      ft = 'named',
+      opts = {},
+    }
+<
+Or call setup() directly: >lua
+    require('named-conf').setup({})
+<
+Zero-config also works: the plugin registers detection and commands on load.
+Detection matches the `named` filetype and the basename patterns in
+`detect.patterns`.
+
+==============================================================================
+4. CONFIGURATION                                                *named-conf-config*
+
+Defaults: >lua
+    require('named-conf').setup({
+      detect = {
+        enabled = true,
+        filetypes = { 'named' },
+        patterns  = { 'named.conf', 'named.conf.*', '*.named.conf', 'rndc.conf' },
+      },
+      fold = { enabled = true, nested = false, text = nil },
+      checkconf = {
+        enabled    = true,
+        cmd        = 'named-checkconf',
+        args       = {},
+        chroot     = nil,
+        use_buffer = true,
+        on_save    = true,
+      },
+      validate = { enabled = true, on_save = true, on_change = true, debounce = 400 },
+      highlight = { enabled = true, background = false },
+      lsp = { enabled = true, hover = true, completion = true },
+    })
+<
+detect.filetypes ~ Filetypes treated as named.conf (default { 'named' }).
+detect.patterns  ~ Filename globs treated as named.conf.
+fold.nested      ~ Also fold inner blocks (channels, per-view zones).
+fold.text        ~ function(info) -> string|nil; custom fold summary. `info`
+                   has `block`, `lines`, `foldstart`, `foldend`.
+validate.*       ~ Static diagnostics: on_save, on_change, debounce (ms).
+highlight.background ~ Tint each top-level clause's lines.
+highlight.colors ~ Fallback colours (see |named-conf-highlight|).
+lsp.*            ~ In-process docs server: enabled, hover, completion.
+
+==============================================================================
+5. CHECKING THE CONFIG                                       *named-conf-checkconf*
+
+|:NamedCheck| runs `named-checkconf` and publishes its `file:line: message`
+output as diagnostics (|vim.diagnostic|). Configure it under `checkconf`:
+
+checkconf.cmd        ~ The executable to run (path or wrapper script).
+checkconf.args       ~ A list of extra flags passed verbatim, e.g. { '-z' }.
+checkconf.chroot     ~ Convenience for chrooted installs; becomes `-t <dir>`.
+checkconf.use_buffer ~ When the buffer is modified, write its contents to a
+                       temp file in the same directory (so relative `include`
+                       paths resolve) and check that. With a chroot set, the
+                       on-disk file is checked instead (a temp file outside the
+                       chroot is not visible) and you are notified.
+checkconf.on_save    ~ Re-run quietly after each successful write.
+
+Diagnostics about included files are pinned to line 1 with the filename in the
+message. If `cmd` is not executable, |:NamedCheck| reports it and does nothing.
+
+Examples: >lua
+    checkconf = { chroot = '/var/named/chroot', args = { '-z' } }
+    checkconf = { cmd = '/usr/local/sbin/named-checkconf' }
+<
+==============================================================================
+6. COLOUR CODING                                             *named-conf-highlight*
+
+Applied with extmarks over the `named` syntax. Groups use `default = true`, so
+a colorscheme that defines them wins.
+
+  NamedZone        zone clauses (green)
+  NamedOptions     options / logging / controls / channel (blue)
+  NamedAcl         acl / view / key / server / trust anchors (mauve)
+  NamedName        the quoted name of a zone/acl/view/key (teal)
+  NamedZoneType    a zone's `type` value (peach)
+  NamedFilter      address-match statements: allow-*, match-*, listen-on, ...
+  NamedZoneLine    background tint variants, used when highlight.background
+  NamedOptionsLine   is true
+  NamedAclLine
+
+Override via highlight.colors, or define the groups yourself: >lua
+    vim.api.nvim_set_hl(0, 'NamedFilter', { fg = '#f38ba8', bold = true })
+<
+==============================================================================
+7. DOCUMENTATION POPUPS                                          *named-conf-docs*
+
+An in-process LSP server (pure Lua, no external binary) serves hover and
+completion from a built-in knowledge base of the named.conf schema.
+
+  - |K| shows docs for the symbol under the cursor.
+  - Completion offers documented statements/values for the current clause.
+  - |:NamedDocs| shows the same popup directly (works with the LSP disabled).
+
+Set lsp.enabled = false to disable the server.
+
+==============================================================================
+8. COMMANDS                                                  *named-conf-commands*
+
+                                                                   *:NamedCheck*
+:NamedCheck        Run named-checkconf on the current file and publish
+                   diagnostics.
+                                                                *:NamedValidate*
+:NamedValidate     Re-run the static checks (braces, duplicate zones).
+                                                                  *:NamedBrowse*
+:NamedBrowse       Browse clauses and jump to the chosen one.
+                                                                    *:NamedDocs*
+:NamedDocs         Show docs for the statement under the cursor.
+                                                                 *:NamedSnippet*
+:NamedSnippet {name}  Insert a skeleton. Names: zone-primary, zone-secondary,
+                   zone-forward, acl, view, key, options, logging.
+                                                                  *:NamedAttach*
+:NamedAttach       Attach features to the current buffer manually.
+
+==============================================================================
+9. EVENTS                                                      *named-conf-events*
+
+                                                            *NamedConfAttach*
+The plugin fires a |User| autocmd `NamedConfAttach` after attaching to a
+buffer, with `data.bufnr` set. Use it to add buffer-local keymaps: >lua
+    vim.api.nvim_create_autocmd('User', {
+      pattern = 'NamedConfAttach',
+      callback = function(args)
+        vim.keymap.set('n', '<leader>nc', '<cmd>NamedCheck<cr>',
+          { buffer = args.data.bufnr })
+      end,
+    })
+<
+==============================================================================
+10. HEALTH                                                     *named-conf-health*
+
+Run |:checkhealth| named-conf to verify the Neovim version, whether
+`named-checkconf` is found (and the chroot/args in effect), optional
+dependencies, and how many knowledge-base entries loaded.
+
+vim:tw=78:ts=8:ft=help:norl:
