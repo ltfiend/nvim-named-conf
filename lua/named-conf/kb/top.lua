@@ -72,6 +72,34 @@ return {
     doc = 'Syntax: `statistics-channels { inet <addr> port <n> allow { ... }; };`.\n'
       .. 'Requires BIND built with libxml2/json-c.',
   },
+  ['remote-servers'] = {
+    summary = 'Name a reusable list of remote servers (the general form of primaries).',
+    doc = 'Syntax: `remote-servers "name" [port <n>] { 192.0.2.1 key "k"; };`.\n'
+      .. 'Reference it from `primaries`/`also-notify`/`parental-agents`. The\n'
+      .. 'keywords `primaries` and `masters` are accepted synonyms.',
+  },
+  tls = {
+    summary = 'A reusable TLS profile for DNS-over-TLS / DNS-over-HTTPS.',
+    doc = 'Syntax: `tls "name" { cert-file "..."; key-file "..."; protocols { TLSv1.3; }; };`.\n'
+      .. 'Reference it from `listen-on ... tls "name"` or per-server `tls`. The\n'
+      .. 'built-in profile `ephemeral` uses a self-signed throwaway certificate.',
+  },
+  http = {
+    summary = 'A named HTTP endpoint configuration for DNS-over-HTTPS (DoH).',
+    doc = 'Syntax: `http "name" { endpoints { "/dns-query"; }; };`. Reference it\n'
+      .. 'from `listen-on ... http "name"`. The built-in `default` serves\n'
+      .. '`/dns-query`.',
+  },
+  ['key-store'] = {
+    summary = 'Where DNSSEC keys for a `dnssec-policy` are stored (disk or HSM).',
+    doc = 'Syntax: `key-store "name" { directory "..."; pkcs11-uri "..."; };`.\n'
+      .. 'Built-in stores: `key-directory` (files) and `disabled`.',
+  },
+  dyndb = {
+    summary = 'Load a dynamic-database module that supplies zones at runtime.',
+    doc = 'Syntax: `dyndb "name" "module.so" { driver args };`. Used by backends\n'
+      .. 'such as the FreeIPA LDAP driver.',
+  },
   ['trust-anchors'] = {
     summary = 'Define DNSSEC trust anchors (DS/DNSKEY) for validation.',
     doc = 'Replaces the older `trusted-keys` / `managed-keys`. Each anchor may be\n'

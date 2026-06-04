@@ -162,10 +162,13 @@ vim.api.nvim_set_hl(0, 'NamedZone', { fg = '#a6e3a1', bold = true })
 
 A tiny **in-process LSP server** (Lua — nothing to install) attaches to
 `named.conf` buffers and serves `textDocument/hover` and
-`textDocument/completion` from a built-in knowledge base of the BIND schema:
-top-level clauses, the common `options`/`zone`/`view`/`key`/`server` statements,
-the `logging` channel options, zone `type` values, severities, TSIG algorithms,
-and the built-in ACLs.
+`textDocument/completion` from a built-in knowledge base of the BIND schema,
+tracking the **BIND 9.20.23** grammar: every top-level clause, the full
+`options`/`view`/`zone`/`server` statement sets (including `tls`, `http`,
+`key-store`, `dnssec-policy`, `dlz` blocks), the `logging` channel options, zone
+`type` values, severities, TSIG algorithms, and the built-in ACLs. Statements
+BIND flags as deprecated/obsolete/experimental/test-only or compiled out are
+documented with that status noted.
 
 Because it's a real LSP, your existing keymaps just work:
 

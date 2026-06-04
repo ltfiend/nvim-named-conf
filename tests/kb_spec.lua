@@ -15,6 +15,57 @@ describe('knowledge base', function()
     assert.is_not_nil(kb.lookup_key('severity', { clause = 'channel' }))
   end)
 
+  it('covers BIND 9.20 options statements (new in this release range)', function()
+    for _, name in ipairs({
+      'qname-minimization', 'stale-answer-enable', 'max-stale-ttl',
+      'response-policy', 'catalog-zones', 'dns64', 'min-cache-ttl',
+      'send-cookie', 'require-server-cookie', 'resolver-use-dns64',
+      'tcp-initial-timeout', 'sig0message-checks-limit', 'fetches-per-zone',
+    }) do
+      assert.is_not_nil(kb.lookup_key(name, { clause = 'options' }),
+        'missing options statement: ' .. name)
+    end
+  end)
+
+  it('covers zone-specific statements across zone types', function()
+    for _, name in ipairs({
+      'checkds', 'database', 'journal', 'inline-signing', 'update-policy',
+      'server-addresses', 'server-names', 'parental-agents', 'primaries',
+      'in-view',
+    }) do
+      assert.is_not_nil(kb.lookup_key(name, { clause = 'zone' }),
+        'missing zone statement: ' .. name)
+    end
+  end)
+
+  it('inherits options statements inside a zone scope', function()
+    -- zone scope falls through to the options table.
+    assert.is_not_nil(kb.lookup_key('also-notify', { clause = 'zone' }))
+    assert.is_not_nil(kb.lookup_key('masterfile-format', { clause = 'zone' }))
+  end)
+
+  it('documents the server, tls, http, key-store and dnssec-policy blocks', function()
+    assert.is_not_nil(kb.lookup_key('tcp-only', { clause = 'server' }))
+    assert.is_not_nil(kb.lookup_key('edns-version', { clause = 'server' }))
+    assert.is_not_nil(kb.lookup_key('cert-file', { clause = 'tls' }))
+    assert.is_not_nil(kb.lookup_key('protocols', { clause = 'tls' }))
+    assert.is_not_nil(kb.lookup_key('endpoints', { clause = 'http' }))
+    assert.is_not_nil(kb.lookup_key('pkcs11-uri', { clause = 'key-store' }))
+    assert.is_not_nil(kb.lookup_key('signatures-validity', { clause = 'dnssec-policy' }))
+    assert.is_not_nil(kb.lookup_key('nsec3param', { clause = 'dnssec-policy' }))
+  end)
+
+  it('documents new top-level clauses', function()
+    for _, name in ipairs({ 'tls', 'http', 'key-store', 'remote-servers', 'dyndb' }) do
+      assert.is_not_nil(kb.lookup_key(name, { clause = 'top' }),
+        'missing top-level clause: ' .. name)
+    end
+  end)
+
+  it('does not offer statements removed before 9.20 (auto-dnssec)', function()
+    assert.is_nil(kb.lookup_key('auto-dnssec', { clause = 'zone' }))
+  end)
+
   it('documents the zone type value enum', function()
     local e = kb.lookup_value('primary', 'type', { clause = 'zone' })
     assert.is_not_nil(e)
@@ -84,5 +135,13 @@ describe('context.at', function()
     local ctx = context.at(b, 0, 0) -- on "zone"
     assert.equals('zone', ctx.word)
     assert.equals('top', ctx.clause)
+  end)
+
+  it('scopes statements inside a tls block', function()
+    local b = buf({ 'tls "local" {', '    cert-file "/p/cert.pem";', '};' })
+    local ctx = context.at(b, 1, 6) -- on "cert-file"
+    assert.equals('cert-file', ctx.word)
+    assert.equals('tls', ctx.clause)
+    assert.is_not_nil(require('named-conf.knowledge').lookup_key(ctx.word, ctx))
   end)
 end)

@@ -133,7 +133,10 @@ Override via highlight.colors, or define the groups yourself: >lua
 7. DOCUMENTATION POPUPS                                          *named-conf-docs*
 
 An in-process LSP server (pure Lua, no external binary) serves hover and
-completion from a built-in knowledge base of the named.conf schema.
+completion from a built-in knowledge base of the named.conf schema, tracking
+the BIND 9.20.23 grammar (every top-level clause and the full options/view/
+zone/server statement sets, plus the tls/http/key-store/dnssec-policy/dlz
+blocks). Deprecated/obsolete/experimental statements are noted as such.
 
   - |K| shows docs for the symbol under the cursor.
   - Completion offers documented statements/values for the current clause.

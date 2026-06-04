@@ -34,3 +34,9 @@ take a look at my nvim-rndc-zone plugin.  What is the best way to make the named
 
 ---
 
+## 2026-06-03 20:54:55
+
+I'd like you to make sure this project, especially the lsp has all the configuration options up to date in bind version 9.20.23.  The applicable ARM is located at https://bind9.readthedocs.io/en/v9.20.23/
+
+---
+

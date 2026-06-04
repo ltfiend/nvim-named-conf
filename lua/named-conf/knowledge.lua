@@ -42,8 +42,13 @@ local zone_keys = merge({ type = zone.type }, zone.keys or {})
 local logging_keys = logging.keys or {}
 local view_keys = merge(misc.view or {}, options_keys)
 local key_keys = misc.key or {}
+local key_store_keys = misc.key_store or {}
 local server_keys = misc.server or {}
 local controls_keys = misc.controls or {}
+local tls_keys = misc.tls or {}
+local http_keys = misc.http or {}
+local dlz_keys = misc.dlz or {}
+local dnssec_policy_keys = misc.dnssec_policy or {}
 
 -- Statement tables searched (in order) for a given enclosing clause.
 local function scope_tables(clause)
@@ -57,10 +62,20 @@ local function scope_tables(clause)
     return { logging_keys, top }
   elseif clause == 'key' then
     return { key_keys, top }
+  elseif clause == 'key-store' then
+    return { key_store_keys, top }
   elseif clause == 'server' then
     return { server_keys, top }
   elseif clause == 'controls' then
     return { controls_keys, top }
+  elseif clause == 'tls' then
+    return { tls_keys, top }
+  elseif clause == 'http' then
+    return { http_keys, top }
+  elseif clause == 'dlz' then
+    return { dlz_keys, top }
+  elseif clause == 'dnssec-policy' then
+    return { dnssec_policy_keys, top }
   end
   return { top }
 end

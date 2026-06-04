@@ -15,8 +15,9 @@ return {
     },
     file = {
       summary = 'Write this channel to a file, with optional rotation/size limits.',
-      doc = 'Syntax: `file "path" [versions <n>|unlimited] [size <limit>]`.\n'
-        .. 'Example: `file "named.log" versions 3 size 20m;`.',
+      doc = 'Syntax: `file "path" [versions <n>|unlimited] [size <limit>]\n'
+        .. '[suffix increment|timestamp]`. `suffix timestamp` names rolled files\n'
+        .. 'by time instead of a counter. Example: `file "named.log" versions 3 size 20m;`.',
     },
     syslog = {
       summary = 'Send this channel to syslog at the given facility.',
