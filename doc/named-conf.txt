@@ -138,6 +138,9 @@ the BIND 9.20.23 grammar (every top-level clause and the full options/view/
 zone/server statement sets, plus the tls/http/key-store/dnssec-policy/dlz
 blocks). Deprecated/obsolete/experimental statements are noted as such.
 
+rndc.conf / rndc.key files are recognised too and served their own (smaller)
+schema; named-checkconf is not run on them.
+
   - |K| shows docs for the symbol under the cursor.
   - Completion offers documented statements/values for the current clause.
   - |:NamedDocs| shows the same popup directly (works with the LSP disabled).

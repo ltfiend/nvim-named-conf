@@ -40,3 +40,9 @@ I'd like you to make sure this project, especially the lsp has all the configura
 
 ---
 
+## 2026-06-03 21:36:58
+
+yep, let's do rndc as well.
+
+---
+

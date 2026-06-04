@@ -55,11 +55,13 @@ function M.check()
   local n_opt = vim.tbl_count((kb.options or {}).keys or {})
   local n_zone = vim.tbl_count((kb.zone or {}).keys or {})
   local n_log = vim.tbl_count((kb.logging or {}).keys or {})
+  local n_rndc = vim.tbl_count((kb.rndc or {}).options or {})
+    + vim.tbl_count((kb.rndc or {}).server or {})
   if n_top + n_opt + n_zone + n_log == 0 then
     warn('knowledge base is empty (kb/*.lua failed to load)')
   else
-    ok(string.format('knowledge base: %d clauses, %d options, %d zone, %d logging statements',
-      n_top, n_opt, n_zone, n_log))
+    ok(string.format('knowledge base: %d clauses, %d options, %d zone, %d logging, %d rndc statements',
+      n_top, n_opt, n_zone, n_log, n_rndc))
   end
 end
 

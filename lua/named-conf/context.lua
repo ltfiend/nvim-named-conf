@@ -68,11 +68,23 @@ local function enclosing(parsed, row)
   return block.clause or 'top', block
 end
 
+--- The config dialect of a buffer: 'rndc' for rndc.conf-style files, else
+--- 'named'. Set by detect.attach; defaults to 'named' when unset.
+---@param bufnr integer
+---@return string
+local function dialect_of(bufnr)
+  local ok, val = pcall(vim.api.nvim_buf_get_var, bufnr, 'named_conf_dialect')
+  if ok and val == 'rndc' then
+    return 'rndc'
+  end
+  return 'named'
+end
+
 --- Full context at a position.
 ---@param bufnr integer
 ---@param row integer 0-indexed line
 ---@param col integer 0-indexed byte column
----@return { word: string, kind: string, line_key: string|nil, clause: string, block: table|nil }
+---@return { word: string, kind: string, line_key: string|nil, clause: string, dialect: string, block: table|nil }
 function M.at(bufnr, row, col)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local line = lines[row + 1] or ''
@@ -84,6 +96,7 @@ function M.at(bufnr, row, col)
     kind = kind,
     line_key = line_key,
     clause = clause,
+    dialect = dialect_of(bufnr),
     block = block,
   }
 end

@@ -87,6 +87,31 @@ describe('end-to-end', function()
     assert.is_not_nil(client.server_capabilities.completionProvider.triggerCharacters)
   end)
 
+  it('attaches an rndc.conf buffer with the rndc dialect and hovers its schema', function()
+    local rbuf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_set_option_value('swapfile', false, { buf = rbuf })
+    vim.api.nvim_set_option_value('buftype', 'nofile', { buf = rbuf })
+    vim.api.nvim_buf_set_name(rbuf, '/tmp/rndc.conf')
+    vim.api.nvim_buf_set_lines(rbuf, 0, -1, false, {
+      'options {',
+      '    default-server 127.0.0.1;',
+      '    default-key "rndc-key";',
+      '};',
+    })
+
+    assert.is_true(detect.should_attach('/etc/bind/rndc.conf', ''))
+    detect.attach(rbuf)
+    assert.equals('rndc', vim.api.nvim_buf_get_var(rbuf, 'named_conf_dialect'))
+
+    local line = vim.api.nvim_buf_get_lines(rbuf, 1, 2, false)[1]
+    local col = ({ line:find('default%-server') })[1]
+    local md = require('named-conf.hover').markdown(rbuf, 1, col)
+    assert.is_not_nil(md)
+    assert.is_true(md:find('default-server', 1, true) ~= nil)
+
+    vim.api.nvim_buf_delete(rbuf, { force = true })
+  end)
+
   it('exposes hover_markdown for programmatic use', function()
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
     local row

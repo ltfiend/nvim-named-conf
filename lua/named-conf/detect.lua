@@ -52,6 +52,19 @@ function M.should_attach(path, ft)
   return M.matches_name(name)
 end
 
+--- The config dialect for a file basename: 'rndc' for rndc.conf / rndc.key
+--- style files (whose options/server schema differs from named.conf), else
+--- 'named'. Drives schema scoping and skips named-checkconf for rndc files.
+---@param name string|nil  basename
+---@return string  'rndc' | 'named'
+function M.dialect_for(name)
+  name = name or ''
+  if name:match('^rndc%.conf') or name:match('%.rndc%.conf$') or name:match('^rndc%.key$') then
+    return 'rndc'
+  end
+  return 'named'
+end
+
 --- Whether a buffer has been attached (opted in).
 ---@param bufnr integer
 ---@return boolean
@@ -69,6 +82,9 @@ function M.attach(bufnr)
   end
   vim.api.nvim_buf_set_var(bufnr, 'named_conf', true)
 
+  local dialect = M.dialect_for(vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t'))
+  vim.api.nvim_buf_set_var(bufnr, 'named_conf_dialect', dialect)
+
   if config.options.fold.enabled then
     require('named-conf.fold').setup_buffer(bufnr)
   end
@@ -78,7 +94,8 @@ function M.attach(bufnr)
   if config.options.highlight.enabled then
     require('named-conf.highlight').setup_buffer(bufnr)
   end
-  if config.options.checkconf.enabled then
+  -- named-checkconf validates named.conf, not rndc.conf — skip it for rndc.
+  if config.options.checkconf.enabled and dialect ~= 'rndc' then
     require('named-conf.checkconf').setup_buffer(bufnr)
   end
   if config.options.lsp.enabled then

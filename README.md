@@ -170,6 +170,11 @@ tracking the **BIND 9.20.23** grammar: every top-level clause, the full
 BIND flags as deprecated/obsolete/experimental/test-only or compiled out are
 documented with that status noted.
 
+`rndc.conf` and `rndc.key` files are recognised too and get their own
+(separate) schema — the `options`/`server`/`key` blocks of `rndc.conf`, not the
+much larger named.conf set. `named-checkconf` (which only validates named.conf)
+is not run on rndc files.
+
 Because it's a real LSP, your existing keymaps just work:
 
 - **`K`** shows the docs for the symbol under the cursor.

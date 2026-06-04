@@ -66,6 +66,36 @@ describe('knowledge base', function()
     assert.is_nil(kb.lookup_key('auto-dnssec', { clause = 'zone' }))
   end)
 
+  it('serves the rndc.conf schema under the rndc dialect', function()
+    assert.is_not_nil(kb.lookup_key('default-server', { clause = 'options', dialect = 'rndc' }))
+    assert.is_not_nil(kb.lookup_key('default-key', { clause = 'options', dialect = 'rndc' }))
+    assert.is_not_nil(kb.lookup_key('addresses', { clause = 'server', dialect = 'rndc' }))
+    assert.is_not_nil(kb.lookup_key('source-address', { clause = 'server', dialect = 'rndc' }))
+    -- key block is shared with named.conf.
+    assert.is_not_nil(kb.lookup_key('algorithm', { clause = 'key', dialect = 'rndc' }))
+    -- rndc top-level clauses.
+    assert.is_not_nil(kb.lookup_key('options', { clause = 'top', dialect = 'rndc' }))
+    assert.is_not_nil(kb.lookup_key('server', { clause = 'top', dialect = 'rndc' }))
+  end)
+
+  it('does not leak named.conf options into the rndc dialect', function()
+    -- `recursion`/`directory` are named.conf options, invalid in rndc.conf.
+    assert.is_nil(kb.lookup_key('recursion', { clause = 'options', dialect = 'rndc' }))
+    assert.is_nil(kb.lookup_key('directory', { clause = 'options', dialect = 'rndc' }))
+    -- and the rndc-only defaults are not offered to named.conf.
+    assert.is_nil(kb.lookup_key('default-server', { clause = 'options' }))
+  end)
+
+  it('offers rndc statement candidates for the rndc options clause', function()
+    local names = {}
+    for _, c in ipairs(kb.key_candidates({ clause = 'options', dialect = 'rndc' })) do
+      names[c.name] = true
+    end
+    assert.is_true(names['default-server'])
+    assert.is_true(names['default-port'])
+    assert.is_nil(names['recursion'])
+  end)
+
   it('documents the zone type value enum', function()
     local e = kb.lookup_value('primary', 'type', { clause = 'zone' })
     assert.is_not_nil(e)
@@ -143,5 +173,29 @@ describe('context.at', function()
     assert.equals('cert-file', ctx.word)
     assert.equals('tls', ctx.clause)
     assert.is_not_nil(require('named-conf.knowledge').lookup_key(ctx.word, ctx))
+  end)
+
+  it('defaults to the named dialect and honours the rndc buffer var', function()
+    local b = buf({ 'options {', '    default-server 127.0.0.1;', '};' })
+    assert.equals('named', context.at(b, 0, 0).dialect)
+    vim.api.nvim_buf_set_var(b, 'named_conf_dialect', 'rndc')
+    local ctx = context.at(b, 1, 6) -- on "default-server"
+    assert.equals('rndc', ctx.dialect)
+    assert.equals('options', ctx.clause)
+    assert.is_not_nil(require('named-conf.knowledge').lookup_key(ctx.word, ctx))
+  end)
+end)
+
+describe('detect.dialect_for', function()
+  local detect = require('named-conf.detect')
+  it('classifies rndc files', function()
+    assert.equals('rndc', detect.dialect_for('rndc.conf'))
+    assert.equals('rndc', detect.dialect_for('rndc.key'))
+    assert.equals('rndc', detect.dialect_for('rndc.conf.bak'))
+  end)
+  it('classifies named files as named', function()
+    assert.equals('named', detect.dialect_for('named.conf'))
+    assert.equals('named', detect.dialect_for('named.conf.local'))
+    assert.equals('named', detect.dialect_for('zones.conf'))
   end)
 end)

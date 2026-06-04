@@ -15,12 +15,14 @@ local options = safe_require('named-conf.kb.options')
 local zone = safe_require('named-conf.kb.zone')
 local logging = safe_require('named-conf.kb.logging')
 local misc = safe_require('named-conf.kb.misc')
+local rndc = safe_require('named-conf.kb.rndc')
 
 M.top = top
 M.options = options
 M.zone = zone
 M.logging = logging
 M.misc = misc
+M.rndc = rndc
 
 local function merge(...)
   local out = {}
@@ -50,8 +52,36 @@ local http_keys = misc.http or {}
 local dlz_keys = misc.dlz or {}
 local dnssec_policy_keys = misc.dnssec_policy or {}
 
+-- The rndc.conf dialect reuses the options/server/key clause names with an
+-- entirely different statement set.
+local rndc_top = rndc.top or {}
+local rndc_options_keys = rndc.options or {}
+local rndc_server_keys = rndc.server or {}
+
+--- The top-level clause table for the buffer's dialect.
+---@param dialect string|nil  'rndc' or 'named' (default)
+---@return table
+local function top_table(dialect)
+  if dialect == 'rndc' then
+    return rndc_top
+  end
+  return top
+end
+
 -- Statement tables searched (in order) for a given enclosing clause.
-local function scope_tables(clause)
+---@param clause string
+---@param dialect string|nil  'rndc' selects the rndc.conf schema
+local function scope_tables(clause, dialect)
+  if dialect == 'rndc' then
+    if clause == 'options' then
+      return { rndc_options_keys, rndc_top }
+    elseif clause == 'server' then
+      return { rndc_server_keys, rndc_top }
+    elseif clause == 'key' then
+      return { key_keys, rndc_top }
+    end
+    return { rndc_top }
+  end
   if clause == 'options' then
     return { options_keys, top }
   elseif clause == 'zone' then
@@ -86,14 +116,16 @@ end
 ---@return table|nil entry
 function M.lookup_key(name, ctx)
   local clause = ctx and ctx.clause or 'top'
-  for _, t in ipairs(scope_tables(clause)) do
+  local dialect = ctx and ctx.dialect
+  for _, t in ipairs(scope_tables(clause, dialect)) do
     if type(t[name]) == 'table' and t[name].summary then
       return t[name]
     end
   end
   -- Last resort: any clause keyword (so `zone`/`options`/... always hover).
-  if top[name] then
-    return top[name]
+  local tt = top_table(dialect)
+  if tt[name] then
+    return tt[name]
   end
   return nil
 end
@@ -167,7 +199,7 @@ end
 ---@return table[]  list of { name, entry }
 function M.key_candidates(ctx)
   local out, seen = {}, {}
-  for _, t in ipairs(scope_tables(ctx and ctx.clause or 'top')) do
+  for _, t in ipairs(scope_tables(ctx and ctx.clause or 'top', ctx and ctx.dialect)) do
     for k, v in pairs(t) do
       if type(v) == 'table' and v.summary and not seen[k] then
         seen[k] = true

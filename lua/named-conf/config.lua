@@ -11,7 +11,7 @@ local defaults = {
   detect = {
     enabled = true,
     filetypes = { 'named' }, -- Neovim sets `named` for named.conf / rndc.conf
-    patterns = { 'named.conf', 'named.conf.*', '*.named.conf', 'rndc.conf' },
+    patterns = { 'named.conf', 'named.conf.*', '*.named.conf', 'rndc.conf', 'rndc.conf.*', 'rndc.key' },
   },
 
   -- Clause-aware folding (zone / options / view / acl / key / logging ...).
