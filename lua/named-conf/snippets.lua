@@ -68,6 +68,42 @@ local TEMPLATES = {
     '    category default { default_log; };',
     '};',
   },
+
+  -- Zone data (master) file skeletons, for the 'zone' dialect.
+  ['zone-skeleton'] = {
+    '$ORIGIN example.com.',
+    '$TTL 3600',
+    '@       IN  SOA ns1.example.com. hostmaster.example.com. (',
+    '                2024010101 ; serial',
+    '                3600       ; refresh',
+    '                900        ; retry',
+    '                1209600    ; expire',
+    '                300 )      ; minimum (negative-caching TTL)',
+    '        IN  NS  ns1.example.com.',
+    '        IN  NS  ns2.example.com.',
+    'ns1     IN  A   192.0.2.1',
+    'ns2     IN  A   192.0.2.2',
+    'www     IN  A   192.0.2.10',
+  },
+  ['record-soa'] = {
+    '@       IN  SOA ns1.example.com. hostmaster.example.com. (',
+    '                2024010101 ; serial',
+    '                3600       ; refresh',
+    '                900        ; retry',
+    '                1209600    ; expire',
+    '                300 )      ; minimum (negative-caching TTL)',
+  },
+  ['record-mx'] = {
+    '@       IN  MX  10 mail.example.com.',
+    'mail    IN  A   192.0.2.25',
+  },
+  ['record-srv'] = {
+    '_service._tcp   IN  SRV 0 5 5060 host.example.com.',
+  },
+  ['record-caa'] = {
+    '@       IN  CAA 0 issue "letsencrypt.org"',
+    '@       IN  CAA 0 iodef "mailto:hostmaster@example.com"',
+  },
 }
 
 --- The available snippet names (for command completion).

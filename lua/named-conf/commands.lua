@@ -20,8 +20,25 @@ function M.setup()
   cmd('NamedDocs', function() require('named-conf.hover').show() end,
     { desc = 'Show BIND docs for the statement under the cursor' })
 
-  cmd('NamedCheck', function() require('named-conf.checkconf').run() end,
-    { desc = 'Run named-checkconf on the current file' })
+  cmd('NamedCheck', function(o)
+    local bufnr = vim.api.nvim_get_current_buf()
+    local ok, dialect = pcall(vim.api.nvim_buf_get_var, bufnr, 'named_conf_dialect')
+    if ok and dialect == 'zone' then
+      require('named-conf.checkzone').run(bufnr, { origin = o.args ~= '' and o.args or nil })
+    else
+      require('named-conf.checkconf').run(bufnr)
+    end
+  end, {
+    nargs = '?',
+    desc = 'Run named-checkconf (named-checkzone for zone files; optional arg = origin)',
+  })
+
+  cmd('NamedZoneCheck', function(o)
+    require('named-conf.checkzone').run(nil, { origin = o.args ~= '' and o.args or nil })
+  end, {
+    nargs = '?',
+    desc = 'Run named-checkzone on the current file (optional arg = zone origin)',
+  })
 
   cmd('NamedValidate', function() require('named-conf.validate').run() end,
     { desc = 'Run static checks (braces, duplicate zones) on the buffer' })

@@ -12,6 +12,11 @@ local defaults = {
     enabled = true,
     filetypes = { 'named' }, -- Neovim sets `named` for named.conf / rndc.conf
     patterns = { 'named.conf', 'named.conf.*', '*.named.conf', 'rndc.conf', 'rndc.conf.*', 'rndc.key' },
+    -- Zone data ("master") files get the 'zone' dialect: RR-type hover and
+    -- completion plus named-checkzone diagnostics, and none of the named.conf
+    -- machinery (folding/highlight/brace checks), which would misparse them.
+    zone_filetypes = { 'bindzone' }, -- Neovim's built-in master-file filetype
+    zone_patterns = { 'db.*', '*.zone', '*.db' },
   },
 
   -- Clause-aware folding (zone / options / view / acl / key / logging ...).
@@ -29,6 +34,19 @@ local defaults = {
     cmd = 'named-checkconf', -- the executable to run
     args = {}, -- extra flags passed verbatim, e.g. { '-z' } to test-load zones
     chroot = nil, -- convenience: if set, passed as `-t <chroot>`
+    use_buffer = true, -- check unsaved buffer contents via a temp file
+    on_save = true, -- run automatically after a successful write
+  },
+
+  -- `named-checkzone` integration for zone data files (the 'zone' dialect).
+  -- The origin passed as its first argument comes from `origin` here, an
+  -- explicit `:NamedCheck <origin>`, the file's `$ORIGIN`, or the filename
+  -- (db.example.com / example.com.zone / example.com.db).
+  checkzone = {
+    enabled = true,
+    cmd = 'named-checkzone',
+    args = {}, -- extra flags passed verbatim, e.g. { '-i', 'full' }
+    origin = nil, -- force a zone origin instead of deriving one
     use_buffer = true, -- check unsaved buffer contents via a temp file
     on_save = true, -- run automatically after a successful write
   },

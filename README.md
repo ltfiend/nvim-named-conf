@@ -50,11 +50,21 @@ highlighting and any treesitter/LSP setup keep working.
   `options`, `logging`, `zone-secondary`, `zone-forward`) insert ready-to-edit
   skeletons.
 
+- **Zone data files** — `db.*` / `*.zone` / `*.db` files (and the `bindzone`
+  filetype) get their own dialect: hover and completion for every common RR
+  type (`SOA`, `NS`, `MX`, `SRV`, `CAA`, `TLSA`, `HTTPS`, …), the
+  `$TTL`/`$ORIGIN`/`$INCLUDE`/`$GENERATE` directives and `@`, plus a
+  **`named-checkzone` runner** that publishes `file:line` errors as
+  diagnostics — the zone origin is derived from `$ORIGIN` or the filename.
+  Zone-file skeletons too: `:NamedSnippet zone-skeleton` / `record-soa` /
+  `record-mx` / `record-srv` / `record-caa`. See
+  [Zone data files](#zone-data-files).
+
 ## Requirements
 
 - **Neovim 0.11+** (developed and tested on **0.12.2**; runs on 0.13 nightly).
-- `named-checkconf` on `$PATH` for `:NamedCheck` (optional — everything else
-  works without it).
+- `named-checkconf` / `named-checkzone` on `$PATH` for `:NamedCheck`
+  (optional — everything else works without them; both ship in `bind9-utils`).
 - Optional: `snacks.nvim` (nicer `:NamedBrowse`), `blink.cmp` (a dedicated
   completion source, though the in-process LSP already feeds completion).
 
@@ -65,7 +75,7 @@ highlighting and any treesitter/LSP setup keep working.
 ```lua
 {
   'ltfiend/nvim-named-conf',
-  ft = 'named',
+  ft = { 'named', 'bindzone' },
   opts = {
     checkconf = {
       cmd = 'named-checkconf',
@@ -79,7 +89,11 @@ highlighting and any treesitter/LSP setup keep working.
 
 Files with the `named` filetype (Neovim already maps `named.conf` and
 `rndc.conf`) are detected automatically, as are basenames matching
-`named.conf`, `named.conf.*`, `*.named.conf`, and `rndc.conf`.
+`named.conf`, `named.conf.*`, `*.named.conf`, and `rndc.conf`. Zone data
+files are detected via the `bindzone` filetype or basenames matching
+`db.*`, `*.zone`, and `*.db` (note the lazy-loading `ft` above only covers
+the filetypes — zone files outside named/bind directories don't get
+`bindzone`, so load the plugin eagerly if you rely on name-based detection).
 
 ## Configuration
 
@@ -91,6 +105,8 @@ require('named-conf').setup({
     enabled = true,
     filetypes = { 'named' },
     patterns  = { 'named.conf', 'named.conf.*', '*.named.conf', 'rndc.conf' },
+    zone_filetypes = { 'bindzone' },          -- zone data ("master") files
+    zone_patterns  = { 'db.*', '*.zone', '*.db' },
   },
   fold = { enabled = true, nested = false, text = nil },
   checkconf = {
@@ -100,6 +116,14 @@ require('named-conf').setup({
     chroot     = nil,       -- convenience: becomes `-t <chroot>`
     use_buffer = true,      -- check unsaved buffer contents via a temp file
     on_save    = true,      -- run automatically after a successful write
+  },
+  checkzone = {
+    enabled    = true,
+    cmd        = 'named-checkzone',
+    args       = {},        -- extra flags passed verbatim, e.g. { '-i', 'full' }
+    origin     = nil,       -- force the zone origin instead of deriving it
+    use_buffer = true,
+    on_save    = true,
   },
   validate = { enabled = true, on_save = true, on_change = true, debounce = 400 },
   highlight = { enabled = true, background = false }, -- see "Colour coding"
@@ -134,6 +158,31 @@ checkconf = { chroot = '/var/named/chroot', args = { '-z' } }
 -- A custom binary / container wrapper:
 checkconf = { cmd = '/usr/local/sbin/named-checkconf' }
 ```
+
+### Zone data files
+
+Zone ("master") files get the `zone` dialect: line-oriented RFC 1035 syntax,
+so none of the clause machinery (folding, brace checks, semantic colours,
+`named-checkconf`) runs on them. Instead:
+
+- **Hover** (`K` or `:NamedDocs`) documents RR types (`SOA` explains every
+  field, `CAA`/`TLSA`/`SSHFP` show their field syntax, `HTTPS`/`SVCB` cover
+  apex aliasing, …), the `$TTL`/`$ORIGIN`/`$INCLUDE`/`$GENERATE` directives,
+  the `IN`/`CH`/`HS` classes, and `@`.
+- **Completion** offers every documented RR type, directive, and class.
+- **`:NamedCheck`** runs `named-checkzone` and publishes `file:line` errors
+  as diagnostics (also quietly on every save). The zone origin is taken from,
+  in order: `checkzone.origin` config, an explicit `:NamedCheck <origin>`
+  argument, the file's `$ORIGIN` directive, or the filename
+  (`db.example.com`, `example.com.zone`, `example.com.db`, or a bare
+  `example.com`). `:NamedZoneCheck` is the explicit spelling of the same
+  runner.
+- **Snippets** — `:NamedSnippet zone-skeleton` inserts a complete
+  `$ORIGIN`/`$TTL`/SOA/NS starting point; `record-soa`, `record-mx`,
+  `record-srv`, and `record-caa` insert individual record skeletons.
+
+Unsaved buffers are checked via a temp file in the same directory, so
+`$INCLUDE` paths still resolve.
 
 ### Colour coding
 
@@ -208,11 +257,12 @@ vim.api.nvim_create_autocmd('User', {
 
 | Command | Description |
 |---|---|
-| `:NamedCheck` | Run `named-checkconf` on the current file |
+| `:NamedCheck [origin]` | Run `named-checkconf` — or `named-checkzone` on a zone data file |
+| `:NamedZoneCheck [origin]` | Run `named-checkzone` on the current file explicitly |
 | `:NamedValidate` | Re-run static checks (braces, duplicate zones) |
 | `:NamedBrowse` | Browse and jump to a clause |
-| `:NamedDocs` | Show docs for the statement under the cursor |
-| `:NamedSnippet {name}` | Insert a skeleton (`zone-primary`, `acl`, `view`, …) |
+| `:NamedDocs` | Show docs for the statement/record type under the cursor |
+| `:NamedSnippet {name}` | Insert a skeleton (`zone-primary`, `acl`, `zone-skeleton`, `record-soa`, …) |
 | `:NamedAttach` | Attach features to the current buffer manually |
 
 ## Embedding the docs LSP in another plugin

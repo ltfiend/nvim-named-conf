@@ -21,6 +21,12 @@ local function completion(params)
   local bufnr = vim.uri_to_bufnr(params.textDocument.uri)
   local row = params.position.line
   local col = params.position.character
+
+  -- Zone data files complete RR types/directives/classes, not statements.
+  local dok, dialect = pcall(vim.api.nvim_buf_get_var, bufnr, 'named_conf_dialect')
+  if dok and dialect == 'zone' then
+    return require('named-conf.zonefile').lsp_completion()
+  end
   local lines = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)
   local line = lines[1] or ''
   local before = line:sub(1, col)

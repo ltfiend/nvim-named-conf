@@ -40,25 +40,54 @@ function M.matches_ft(ft)
   return vim.tbl_contains(config.options.detect.filetypes, ft)
 end
 
+--- Does the basename match a configured zone data ("master") file pattern?
+---@param name string  basename of the file
+---@return boolean
+function M.matches_zone_name(name)
+  if not name or name == '' then
+    return false
+  end
+  for _, glob in ipairs(config.options.detect.zone_patterns or {}) do
+    if name:match(glob_to_pattern(glob)) then
+      return true
+    end
+  end
+  return false
+end
+
+--- Does the filetype match a configured zone-file filetype (e.g. bindzone)?
+---@param ft string|nil
+---@return boolean
+function M.matches_zone_ft(ft)
+  if not ft or ft == '' then
+    return false
+  end
+  return vim.tbl_contains(config.options.detect.zone_filetypes or {}, ft)
+end
+
 --- Decide whether a buffer (by full path + filetype) should be attached.
 ---@param path string  full buffer name
 ---@param ft string|nil  filetype
 ---@return boolean
 function M.should_attach(path, ft)
-  if M.matches_ft(ft) then
+  if M.matches_ft(ft) or M.matches_zone_ft(ft) then
     return true
   end
   local name = vim.fn.fnamemodify(path or '', ':t')
-  return M.matches_name(name)
+  return M.matches_name(name) or M.matches_zone_name(name)
 end
 
---- The config dialect for a file basename: 'rndc' for rndc.conf / rndc.key
---- style files (whose options/server schema differs from named.conf), else
---- 'named'. Drives schema scoping and skips named-checkconf for rndc files.
+--- The config dialect for a file: 'zone' for zone data files, 'rndc' for
+--- rndc.conf / rndc.key style files (whose options/server schema differs from
+--- named.conf), else 'named'. Drives schema scoping and which checker runs.
 ---@param name string|nil  basename
----@return string  'rndc' | 'named'
-function M.dialect_for(name)
+---@param ft string|nil  filetype
+---@return string  'zone' | 'rndc' | 'named'
+function M.dialect_for(name, ft)
   name = name or ''
+  if M.matches_zone_ft(ft) or (M.matches_zone_name(name) and not M.matches_name(name)) then
+    return 'zone'
+  end
   if name:match('^rndc%.conf') or name:match('%.rndc%.conf$') or name:match('^rndc%.key$') then
     return 'rndc'
   end
@@ -82,20 +111,32 @@ function M.attach(bufnr)
   end
   vim.api.nvim_buf_set_var(bufnr, 'named_conf', true)
 
-  local dialect = M.dialect_for(vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t'))
+  local dialect = M.dialect_for(
+    vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t'),
+    vim.api.nvim_get_option_value('filetype', { buf = bufnr })
+  )
   vim.api.nvim_buf_set_var(bufnr, 'named_conf_dialect', dialect)
 
-  if config.options.fold.enabled then
-    require('named-conf.fold').setup_buffer(bufnr)
+  -- Zone data files are line-oriented master-file syntax: the clause-based
+  -- machinery (folding, brace checks, semantic colours, named-checkconf)
+  -- would misparse them, so they get only checkzone + the docs LSP.
+  if dialect ~= 'zone' then
+    if config.options.fold.enabled then
+      require('named-conf.fold').setup_buffer(bufnr)
+    end
+    if config.options.validate.enabled then
+      require('named-conf.validate').setup_buffer(bufnr)
+    end
+    if config.options.highlight.enabled then
+      require('named-conf.highlight').setup_buffer(bufnr)
+    end
   end
-  if config.options.validate.enabled then
-    require('named-conf.validate').setup_buffer(bufnr)
-  end
-  if config.options.highlight.enabled then
-    require('named-conf.highlight').setup_buffer(bufnr)
-  end
-  -- named-checkconf validates named.conf, not rndc.conf — skip it for rndc.
-  if config.options.checkconf.enabled and dialect ~= 'rndc' then
+  -- named-checkconf validates named.conf only — zone files get named-checkzone.
+  if dialect == 'zone' then
+    if config.options.checkzone.enabled then
+      require('named-conf.checkzone').setup_buffer(bufnr)
+    end
+  elseif config.options.checkconf.enabled and dialect ~= 'rndc' then
     require('named-conf.checkconf').setup_buffer(bufnr)
   end
   if config.options.lsp.enabled then
@@ -131,23 +172,27 @@ function M.setup_autocmds()
     return
   end
 
-  -- Filetype-driven (covers Neovim's built-in named.conf/rndc.conf detection).
+  -- Filetype-driven (covers Neovim's built-in named.conf/rndc.conf detection,
+  -- plus bindzone for zone data files under named/bind directories).
+  local fts = {}
+  vim.list_extend(fts, config.options.detect.filetypes)
+  vim.list_extend(fts, config.options.detect.zone_filetypes or {})
   vim.api.nvim_create_autocmd('FileType', {
     group = M.augroup,
-    pattern = config.options.detect.filetypes,
+    pattern = fts,
     callback = function(args)
       M.attach(args.buf)
     end,
   })
 
-  -- Filename-driven (covers split configs / non-standard names that don't get
-  -- the `named` filetype automatically).
+  -- Filename-driven (covers split configs, zone files outside the standard
+  -- directories, and non-standard names that don't get a filetype).
   vim.api.nvim_create_autocmd({ 'BufRead', 'BufNewFile' }, {
     group = M.augroup,
     pattern = '*',
     callback = function(args)
       local name = vim.fn.fnamemodify(args.file, ':t')
-      if M.matches_name(name) then
+      if M.matches_name(name) or M.matches_zone_name(name) then
         M.attach(args.buf)
       end
     end,

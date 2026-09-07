@@ -11,6 +11,11 @@ local M = {}
 ---@param col integer
 ---@return string|nil
 function M.markdown(bufnr, row, col)
+  -- Zone data files use master-file syntax, not clauses — route to zonefile.
+  local ok, dialect = pcall(vim.api.nvim_buf_get_var, bufnr, 'named_conf_dialect')
+  if ok and dialect == 'zone' then
+    return require('named-conf.zonefile').markdown(bufnr, row, col)
+  end
   local ctx = context.at(bufnr, row, col)
   if not ctx.word or ctx.word == '' then
     return nil

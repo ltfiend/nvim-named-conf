@@ -32,6 +32,17 @@ function M.check()
     warn(("'%s' not found — :NamedCheck disabled (set checkconf.cmd)"):format(cc.cmd))
   end
 
+  start('named-checkzone')
+  local cz = config.options.checkzone
+  if vim.fn.executable(cz.cmd) == 1 then
+    ok(("'%s' found (zone-file diagnostics)"):format(cz.cmd))
+    if cz.origin and cz.origin ~= '' then
+      info('forced origin: ' .. cz.origin)
+    end
+  else
+    warn(("'%s' not found — zone-file checks disabled (set checkzone.cmd)"):format(cz.cmd))
+  end
+
   start('Optional dependencies')
   if pcall(require, 'snacks') then
     ok('snacks.nvim found (:NamedBrowse uses its picker)')
@@ -57,11 +68,13 @@ function M.check()
   local n_log = vim.tbl_count((kb.logging or {}).keys or {})
   local n_rndc = vim.tbl_count((kb.rndc or {}).options or {})
     + vim.tbl_count((kb.rndc or {}).server or {})
+  local okrec, records = pcall(require, 'named-conf.kb.records')
+  local n_rec = okrec and vim.tbl_count(records.types or {}) or 0
   if n_top + n_opt + n_zone + n_log == 0 then
     warn('knowledge base is empty (kb/*.lua failed to load)')
   else
-    ok(string.format('knowledge base: %d clauses, %d options, %d zone, %d logging, %d rndc statements',
-      n_top, n_opt, n_zone, n_log, n_rndc))
+    ok(string.format('knowledge base: %d clauses, %d options, %d zone, %d logging, %d rndc statements, %d RR types',
+      n_top, n_opt, n_zone, n_log, n_rndc, n_rec))
   end
 end
 
