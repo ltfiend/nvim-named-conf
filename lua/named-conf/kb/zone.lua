@@ -3,7 +3,7 @@
 -- (see knowledge.lua), so options-level statements valid in a zone — allow-*,
 -- check-*, max-*, masterfile-*, notify-*, transfer-*, dnssec-policy, etc. — need
 -- not be repeated here; only zone-only statements and zone-specific phrasings
--- live below. Coverage follows the BIND 9.20.23 zone grammar (primary,
+-- live below. Coverage follows the BIND 9.20.27 zone grammar (primary,
 -- secondary, stub, static-stub, forward, redirect, mirror, hint, in-view).
 return {
   -- The `type` statement and its values.

@@ -21,6 +21,7 @@ describe('knowledge base', function()
       'response-policy', 'catalog-zones', 'dns64', 'min-cache-ttl',
       'send-cookie', 'require-server-cookie', 'resolver-use-dns64',
       'tcp-initial-timeout', 'sig0message-checks-limit', 'fetches-per-zone',
+      'tcp-reuse-timeout',
     }) do
       assert.is_not_nil(kb.lookup_key(name, { clause = 'options' }),
         'missing options statement: ' .. name)

@@ -1,4 +1,4 @@
--- Knowledge base: the `rndc.conf` schema (BIND 9.20.23 `rndc.grammar`).
+-- Knowledge base: the `rndc.conf` schema (BIND 9.20.27 `rndc.grammar`).
 --
 -- rndc.conf reuses the clause keywords `options`, `server` and `key`, but with a
 -- completely different and much smaller statement set than named.conf — so this

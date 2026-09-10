@@ -1,7 +1,7 @@
 -- Knowledge base: statements for the smaller clause blocks — acl / view / key /
 -- key-store / server / controls / tls / http / dlz / dnssec-policy — plus the
 -- shared values (built-in ACLs, booleans) used across scopes. Coverage follows
--- the BIND 9.20.23 grammar.
+-- the BIND 9.20.27 grammar.
 return {
   -- Statements inside `key { }` (a TSIG key).
   key = {

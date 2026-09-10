@@ -2,8 +2,8 @@
 -- inheritance in knowledge.lua, these also serve `view { }` and `zone { }`
 -- (the more-specific clause table wins when a name collides).
 --
--- Coverage target: the complete `options` grammar of BIND 9.20.23
--- (https://bind9.readthedocs.io/en/v9.20.23/reference.html). Statuses BIND
+-- Coverage target: the complete `options` grammar of BIND 9.20.27
+-- (https://bind9.readthedocs.io/en/v9.20.27/reference.html). Statuses BIND
 -- itself flags — deprecated / obsolete / experimental / test-only / not built
 -- by default — are noted inline so hover/completion warns the user.
 --
@@ -631,6 +631,10 @@ return {
     ['tcp-keepalive-timeout'] = { summary = 'EDNS TCP-keepalive value (deciseconds) advertised to clients.' },
     ['tcp-advertised-timeout'] = { summary = 'EDNS TCP-keepalive timeout advertised to clients (deciseconds).' },
     ['tcp-receive-buffer'] = { summary = 'Socket receive buffer size (bytes) for TCP (0 = OS default).' },
+    ['tcp-reuse-timeout'] = {
+      summary = 'Deciseconds an idle outgoing TCP/TLS connection is kept open for reuse.',
+      doc = 'Default 50 (5 seconds), maximum 1200 (2 minutes); 0 disables reuse of idle outgoing connections. (new in 9.20.26)',
+    },
     ['tcp-send-buffer'] = { summary = 'Socket send buffer size (bytes) for TCP (0 = OS default).' },
     ['udp-receive-buffer'] = { summary = 'Socket receive buffer size (bytes) for UDP (0 = OS default).' },
     ['udp-send-buffer'] = { summary = 'Socket send buffer size (bytes) for UDP (0 = OS default).' },
