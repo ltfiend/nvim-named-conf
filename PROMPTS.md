@@ -52,3 +52,15 @@ merge it to main and push
 
 ---
 
+## 2026-06-05 22:40:19
+
+<local-command-stdout>(no content)</local-command-stdout>
+
+---
+
+## 2026-09-10 00:33:37
+
+add functionality that opens the output of man named.conf into a named.conf buffer so the user can hover text all the options
+
+---
+

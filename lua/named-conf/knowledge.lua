@@ -110,6 +110,39 @@ local function scope_tables(clause, dialect)
   return { top }
 end
 
+-- Ordered (clause, table) pairs for clause-less lookup. Options comes right
+-- after top so shared statements resolve to their canonical options scope.
+local all_scopes = {
+  { 'top', top },
+  { 'options', options_keys },
+  { 'zone', zone_keys },
+  { 'view', view_keys },
+  { 'logging', logging_keys },
+  { 'key', key_keys },
+  { 'key-store', key_store_keys },
+  { 'server', server_keys },
+  { 'controls', controls_keys },
+  { 'tls', tls_keys },
+  { 'http', http_keys },
+  { 'dlz', dlz_keys },
+  { 'dnssec-policy', dnssec_policy_keys },
+}
+
+--- Resolve a statement keyword with NO clause context — e.g. hovering a word
+--- in the rendered man page (:NamedMan), where prose has no enclosing clause.
+--- Searches every clause's statement table and reports which clause matched.
+---@param name string
+---@return table|nil entry, string|nil clause
+function M.lookup_any(name)
+  for _, scope in ipairs(all_scopes) do
+    local e = scope[2][name]
+    if type(e) == 'table' and e.summary then
+      return e, scope[1]
+    end
+  end
+  return nil
+end
+
 --- Resolve documentation for a statement KEYWORD within a context.
 ---@param name string
 ---@param ctx { clause: string }|nil

@@ -16,6 +16,11 @@ function M.markdown(bufnr, row, col)
   if ok and dialect == 'zone' then
     return require('named-conf.zonefile').markdown(bufnr, row, col)
   end
+  -- The rendered man page (:NamedMan) is prose with no clause context — route
+  -- to the clause-agnostic lookup.
+  if ok and dialect == 'man' then
+    return require('named-conf.man').markdown(bufnr, row, col)
+  end
   local ctx = context.at(bufnr, row, col)
   if not ctx.word or ctx.word == '' then
     return nil

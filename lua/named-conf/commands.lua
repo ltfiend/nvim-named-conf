@@ -20,6 +20,9 @@ function M.setup()
   cmd('NamedDocs', function() require('named-conf.hover').show() end,
     { desc = 'Show BIND docs for the statement under the cursor' })
 
+  cmd('NamedMan', function() require('named-conf.man').open() end,
+    { desc = 'Open man named.conf in a buffer with docs hover (K / :NamedDocs)' })
+
   cmd('NamedCheck', function(o)
     local bufnr = vim.api.nvim_get_current_buf()
     local ok, dialect = pcall(vim.api.nvim_buf_get_var, bufnr, 'named_conf_dialect')

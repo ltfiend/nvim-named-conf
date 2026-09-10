@@ -35,6 +35,11 @@ highlighting and any treesitter/LSP setup keep working.
   `primary` / `auto` / `localhost`, to see what it does. See
   [Documentation popups](#documentation-popups).
 
+- **Man page browser** — `:NamedMan` opens the rendered `man named.conf` in a
+  scratch buffer with the same hover attached: press `K` on any statement name
+  in the man page to get the knowledge-base popup, looked up across every
+  clause's schema.
+
 - **`named-checkconf` integration** — `:NamedCheck` runs the configured
   `named-checkconf` and turns its `file:line: message` output into diagnostics.
   The command, its flags, and a chroot directory are all configurable. See
@@ -229,6 +234,10 @@ Because it's a real LSP, your existing keymaps just work:
 - **`K`** shows the docs for the symbol under the cursor.
 - Completion suggests documented statements/values for the current clause.
 - **`:NamedDocs`** shows the same popup directly — handy if you keep the LSP off.
+- **`:NamedMan`** opens the system `man named.conf` page in a scratch buffer
+  with hover wired up — browse the manual and press `K` on any option to get
+  the plugin's docs for it (the lookup spans every clause, since man-page
+  prose has no enclosing clause; `q` closes the window).
 
 Set `lsp.enabled = false` to disable the server (`:NamedDocs` still works). Run
 `:checkhealth named-conf` to see how many schema entries loaded.
@@ -262,6 +271,7 @@ vim.api.nvim_create_autocmd('User', {
 | `:NamedValidate` | Re-run static checks (braces, duplicate zones) |
 | `:NamedBrowse` | Browse and jump to a clause |
 | `:NamedDocs` | Show docs for the statement/record type under the cursor |
+| `:NamedMan` | Open `man named.conf` in a buffer with docs hover (`K`) attached |
 | `:NamedSnippet {name}` | Insert a skeleton (`zone-primary`, `acl`, `zone-skeleton`, `record-soa`, …) |
 | `:NamedAttach` | Attach features to the current buffer manually |
 

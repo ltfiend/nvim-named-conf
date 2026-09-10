@@ -36,6 +36,7 @@ function M.browse(...) return require('named-conf.picker').browse(...) end
 function M.validate(...) return require('named-conf.validate').run(...) end
 function M.check(...) return require('named-conf.checkconf').run(...) end
 function M.docs(...) return require('named-conf.hover').show(...) end
+function M.man(...) return require('named-conf.man').open(...) end
 
 -- Public API for OTHER plugins that edit named.conf syntax in their own buffers
 -- (e.g. nvim-rndc-zone editing a `zone { ... }` block from `rndc showzone`).
