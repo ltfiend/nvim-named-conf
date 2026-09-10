@@ -64,3 +64,15 @@ add functionality that opens the output of man named.conf into a named.conf buff
 
 ---
 
+## 2026-09-10 00:59:13
+
+push it
+
+---
+
+## 2026-09-10 08:10:30
+
+I'm thinking this is a little much for this build.  I want to load the named.conf man page just to get a complete example of all configuration options so you can use hover text to learn about them.   Let's do it more efficently by just extracting the named.conf page from the installed BIND and create a method to load that into a immutable buffer where I can do hover text.   Seperately spin up an agent to make sure that all the hover text in the plugin is up to date with BIND 9.20.27.
+
+---
+

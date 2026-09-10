@@ -61,15 +61,8 @@ describe('man page browser', function()
   end)
 
   describe(':NamedMan open', function()
-    it('renders the man page into a hover-enabled scratch buffer', function()
-      if vim.fn.executable('man') ~= 1 then
-        pending('man not installed')
-        return
-      end
-      -- `man -w` must resolve to a real page file (Ubuntu's minimized-system
-      -- stub exits 0 while printing a notice instead of a path).
-      local path = vim.trim(vim.fn.system({ 'man', '-w', 'named.conf' }))
-      if vim.v.shell_error ~= 0 or vim.fn.filereadable(path) ~= 1 then
+    it('loads the installed page into an immutable hover-enabled buffer', function()
+      if vim.fn.executable('man') ~= 1 or not man.page_path() then
         pending('named.conf man page not installed')
         return
       end
@@ -78,6 +71,7 @@ describe('man page browser', function()
       assert.is_not_nil(bufnr)
       assert.equals('nofile', vim.bo[bufnr].buftype)
       assert.is_false(vim.bo[bufnr].modifiable)
+      assert.is_true(vim.bo[bufnr].readonly)
       assert.equals('man', vim.api.nvim_buf_get_var(bufnr, 'named_conf_dialect'))
       local text = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, 10, false), '\n')
       assert.truthy(text:lower():find('named'))

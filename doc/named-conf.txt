@@ -134,7 +134,7 @@ Override via highlight.colors, or define the groups yourself: >lua
 
 An in-process LSP server (pure Lua, no external binary) serves hover and
 completion from a built-in knowledge base of the named.conf schema, tracking
-the BIND 9.20.23 grammar (every top-level clause and the full options/view/
+the BIND 9.20.27 grammar (every top-level clause and the full options/view/
 zone/server statement sets, plus the tls/http/key-store/dnssec-policy/dlz
 blocks). Deprecated/obsolete/experimental statements are noted as such.
 
@@ -144,10 +144,11 @@ schema; named-checkconf is not run on them.
   - |K| shows docs for the symbol under the cursor.
   - Completion offers documented statements/values for the current clause.
   - |:NamedDocs| shows the same popup directly (works with the LSP disabled).
-  - |:NamedMan| opens the rendered `man named.conf` in a scratch buffer with
-    the same hover attached: press K on any statement name in the manual to
-    get its docs. Man-page prose has no enclosing clause, so the word is
-    looked up across every clause's schema. `q` closes the window.
+  - |:NamedMan| loads the named.conf(5) page installed with BIND into an
+    immutable buffer with the same hover attached: the manual enumerates the
+    complete configuration grammar, so press K on any statement name to get
+    its docs. Man-page prose has no enclosing clause, so the word is looked
+    up across every clause's schema.
 
 Set lsp.enabled = false to disable the server.
 
@@ -164,8 +165,8 @@ Set lsp.enabled = false to disable the server.
                                                                     *:NamedDocs*
 :NamedDocs         Show docs for the statement under the cursor.
                                                                      *:NamedMan*
-:NamedMan          Open `man named.conf` in a scratch buffer with docs hover
-                   (K / :NamedDocs) attached.
+:NamedMan          Load the named.conf(5) page installed with BIND into an
+                   immutable buffer with docs hover (K / :NamedDocs) attached.
                                                                  *:NamedSnippet*
 :NamedSnippet {name}  Insert a skeleton. Names: zone-primary, zone-secondary,
                    zone-forward, acl, view, key, options, logging.

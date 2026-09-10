@@ -35,9 +35,10 @@ highlighting and any treesitter/LSP setup keep working.
   `primary` / `auto` / `localhost`, to see what it does. See
   [Documentation popups](#documentation-popups).
 
-- **Man page browser** — `:NamedMan` opens the rendered `man named.conf` in a
-  scratch buffer with the same hover attached: press `K` on any statement name
-  in the man page to get the knowledge-base popup, looked up across every
+- **Man page browser** — `:NamedMan` loads the `named.conf(5)` page installed
+  with BIND into an immutable buffer with the same hover attached: the manual
+  is a complete enumeration of the configuration grammar, so press `K` on any
+  statement name to get the knowledge-base popup, looked up across every
   clause's schema.
 
 - **`named-checkconf` integration** — `:NamedCheck` runs the configured
@@ -217,7 +218,7 @@ vim.api.nvim_set_hl(0, 'NamedZone', { fg = '#a6e3a1', bold = true })
 A tiny **in-process LSP server** (Lua — nothing to install) attaches to
 `named.conf` buffers and serves `textDocument/hover` and
 `textDocument/completion` from a built-in knowledge base of the BIND schema,
-tracking the **BIND 9.20.23** grammar: every top-level clause, the full
+tracking the **BIND 9.20.27** grammar: every top-level clause, the full
 `options`/`view`/`zone`/`server` statement sets (including `tls`, `http`,
 `key-store`, `dnssec-policy`, `dlz` blocks), the `logging` channel options, zone
 `type` values, severities, TSIG algorithms, and the built-in ACLs. Statements
@@ -234,10 +235,11 @@ Because it's a real LSP, your existing keymaps just work:
 - **`K`** shows the docs for the symbol under the cursor.
 - Completion suggests documented statements/values for the current clause.
 - **`:NamedDocs`** shows the same popup directly — handy if you keep the LSP off.
-- **`:NamedMan`** opens the system `man named.conf` page in a scratch buffer
-  with hover wired up — browse the manual and press `K` on any option to get
-  the plugin's docs for it (the lookup spans every clause, since man-page
-  prose has no enclosing clause; `q` closes the window).
+- **`:NamedMan`** loads the `named.conf(5)` page installed with BIND (rendered
+  once and cached) into an immutable buffer with hover wired up — browse the
+  complete option list and press `K` on any option to get the plugin's docs
+  for it (the lookup spans every clause, since man-page prose has no
+  enclosing clause).
 
 Set `lsp.enabled = false` to disable the server (`:NamedDocs` still works). Run
 `:checkhealth named-conf` to see how many schema entries loaded.
@@ -271,7 +273,7 @@ vim.api.nvim_create_autocmd('User', {
 | `:NamedValidate` | Re-run static checks (braces, duplicate zones) |
 | `:NamedBrowse` | Browse and jump to a clause |
 | `:NamedDocs` | Show docs for the statement/record type under the cursor |
-| `:NamedMan` | Open `man named.conf` in a buffer with docs hover (`K`) attached |
+| `:NamedMan` | Load the installed `named.conf(5)` page into an immutable buffer with docs hover (`K`) |
 | `:NamedSnippet {name}` | Insert a skeleton (`zone-primary`, `acl`, `zone-skeleton`, `record-soa`, …) |
 | `:NamedAttach` | Attach features to the current buffer manually |
 
