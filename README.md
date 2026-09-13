@@ -54,7 +54,7 @@ highlighting and any treesitter/LSP setup keep working.
 
 - **Snippets** — `:NamedSnippet zone-primary` (and `acl`, `view`, `key`,
   `options`, `logging`, `zone-secondary`, `zone-forward`) insert ready-to-edit
-  skeletons.
+  skeletons. Bare `:NamedSnippet` browses them in a picker (`vim.ui.select`).
 
 - **Zone data files** — `db.*` / `*.zone` / `*.db` files (and the `bindzone`
   filetype) get their own dialect: hover and completion for every common RR
@@ -274,7 +274,7 @@ vim.api.nvim_create_autocmd('User', {
 | `:NamedBrowse` | Browse and jump to a clause |
 | `:NamedDocs` | Show docs for the statement/record type under the cursor |
 | `:NamedMan` | Load the installed `named.conf(5)` page into an immutable buffer with docs hover (`K`) |
-| `:NamedSnippet {name}` | Insert a skeleton (`zone-primary`, `acl`, `zone-skeleton`, `record-soa`, …) |
+| `:NamedSnippet [{name}]` | Insert a skeleton (`zone-primary`, `acl`, `zone-skeleton`, `record-soa`, …); no arg: pick from a list |
 | `:NamedAttach` | Attach features to the current buffer manually |
 
 ## Embedding the docs LSP in another plugin

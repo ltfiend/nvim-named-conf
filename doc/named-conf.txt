@@ -168,8 +168,10 @@ Set lsp.enabled = false to disable the server.
 :NamedMan          Load the named.conf(5) page installed with BIND into an
                    immutable buffer with docs hover (K / :NamedDocs) attached.
                                                                  *:NamedSnippet*
-:NamedSnippet {name}  Insert a skeleton. Names: zone-primary, zone-secondary,
-                   zone-forward, acl, view, key, options, logging.
+:NamedSnippet [{name}]  Insert a skeleton. Names: zone-primary, zone-secondary,
+                   zone-forward, acl, view, key, options, logging. With no
+                   argument, pick from a list (|vim.ui.select|, so a fuzzy
+                   picker wherever ui.select is upgraded).
                                                                   *:NamedAttach*
 :NamedAttach       Attach features to the current buffer manually.
 

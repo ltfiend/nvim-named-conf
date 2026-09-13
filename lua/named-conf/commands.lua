@@ -47,11 +47,22 @@ function M.setup()
     { desc = 'Run static checks (braces, duplicate zones) on the buffer' })
 
   cmd('NamedSnippet', function(o)
-    require('named-conf.snippets').insert(o.args)
+    local snippets = require('named-conf.snippets')
+    if o.args ~= '' then
+      snippets.insert(o.args)
+      return
+    end
+    -- No name given: browse. vim.ui.select keeps this dependency-free and
+    -- becomes a fuzzy picker wherever ui.select is upgraded (e.g. fzf-lua).
+    vim.ui.select(snippets.names(), { prompt = 'named.conf snippet' }, function(choice)
+      if choice then
+        snippets.insert(choice)
+      end
+    end)
   end, {
-    nargs = 1,
+    nargs = '?',
     complete = function() return require('named-conf.snippets').names() end,
-    desc = 'Insert a named.conf snippet (zone-primary, acl, view, ...)',
+    desc = 'Insert a named.conf snippet (no arg: pick from a list)',
   })
 end
 
